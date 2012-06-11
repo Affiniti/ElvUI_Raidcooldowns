@@ -8,7 +8,7 @@ local RC = E:GetModule('RaidCooldown')
 --------------------------------------------------------
 -- Defaults --
 --------------------------------------------------------
-P['raidcooldowns'] = {
+P['raidcooldown'] = {
 	['enable'] = true,
 	['type'] = 'raid',
 	['castannounce'] = false,

@@ -9,7 +9,8 @@ local RC = E:NewModule('RaidCooldown', 'AceEvent-3.0', 'AceTimer-3.0');
 -- Cooldowns --
 --------------------------------------------------------
 RC.cooldowns = {
-		     -- Paladin
+	
+	     -- Paladin
 	{ -- Divine Guardian (4pc gone with MOP)
 		spellID = 70940,
 		name = "DG",
