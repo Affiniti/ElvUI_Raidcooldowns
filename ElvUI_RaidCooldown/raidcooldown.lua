@@ -36,16 +36,16 @@ RC.OnTalentAdd = function (frame, event, guid, unit, name, realm)
     )
 end
 
-RC.OnTalentUpdate = function (frame, event, guid, unit, newSpec, n1, n2, n3)
-    local baseclass = select (2, UnitClass (unit))
-    local name = UnitName(unit)
+RC.OnTalentUpdate = function (frame, event, guid, unit, newSpec, n1, n2, n3)   
+    local baseclass = select (2, UnitClass (unit)) 							  	
+    local name = UnitName(unit)													
     RC['raid_members_talents'][baseclass][guid] = nil
     RC['raid_members_talents'][baseclass][guid] = {}
     
     table.insert(RC['raid_members_talents'][baseclass][guid], {
-        ['spec']= newSpec,
+        ['spec']= newSpec,														
         ['name']= name,
-        ['n1']  = n1,
+        ['n1']  = n1,															
         ['n2']  = n2,
         ['n3']  = n3}
     )
@@ -205,7 +205,7 @@ function RC:RearrangeBars(anchor)
 	end
 end
 
-function RC:CreateBar(frame,cooldown,caster,frameicon,guid)
+function RC:CreateBar(frame,cooldown,caster,frameicon,guid,reduc)
 	local bar = CB:New(E["media"].normTex, 100, 9)
 	frameicon.bars[bar] = true
 	bar:Set("raidcooldowns:module", "raidcooldowns")
@@ -217,7 +217,7 @@ function RC:CreateBar(frame,cooldown,caster,frameicon,guid)
         bar:SetPoint("TOPLEFT",RC.activebars[cooldown['name']][guid],"TOPLEFT",2,-2);
 	end
 	bar:SetColor(.5,.5,.5,1);	
-	bar:SetDuration(cooldown['CD'])
+	bar:SetDuration((cooldown['CD']-reduc))
 	bar:SetScale(E.db.raidcooldown.scale)
 	bar.candyBarBackground:SetTexture(unpack(E.media.backdropcolor))
 	bar:SetClampedToScreen(true)
@@ -256,14 +256,14 @@ function RC:GetcurrCD(cooldown,start)
 	return cd;
 end
 
-function RC:StartCD(frame,cooldown,text,guid,caster,frameicon, spell)
+function RC:StartCD(frame,cooldown,text,guid,caster,frameicon, spell,reduc)
 	if not (curr[cooldown['spellID']][guid]) then
 	    curr[cooldown['spellID']][guid]=guid
     end
-	local bar = RC:CreateBar(frame,cooldown,caster,frameicon,guid)
+	local bar = RC:CreateBar(frame,cooldown,caster,frameicon,guid,reduc)
 	
 	local args = {cooldown,guid,frame,text,bar,caster,spell}
-	RC:ScheduleTimer("StopCD", cooldown['CD'],args)
+	RC:ScheduleTimer("StopCD", cooldown['CD']-reduc,args)
 end
 
 function RC:CancelBars(frameicon)
@@ -297,15 +297,22 @@ end
 
 RC.UpdateCooldown = function(frame,event,unit,cooldown,text,frameicon, ...)	
 	if(event == "COMBAT_LOG_EVENT_UNFILTERED") then
+		CDReduc = 0
 		 local timestamp, type,_, sourceGUID, sourceName,_,_, destGUID, destName = select(1, ...)
 		 if(type == cooldown['succ']) then
 			local spellId, spellName, spellSchool = select(12, ...)
 			if(spellId == cooldown['spellID']) then
 				if (RC['raid_members'][sourceGUID]) then
-					RC:StartCD(frame,cooldown,text,sourceGUID,sourceName,frameicon, spellName)
+					if (GT:GUIDHasTalent(sourceGUID, "Malfurion's Gift") or GT:GUIDHasTalent(sourceGUID, "Heavenly Voice")) then
+					  CDReduc=300
+					end
+					if GT:GUIDHasTalent(sourceGUID, "Shield Mastery") then
+					  CDReduc=180
+					end
+					RC:StartCD(frame,cooldown,text,sourceGUID,sourceName,frameicon, spellName,CDReduc)
 	                text:SetText(RC.GetTotalCooldown(cooldown))
 	                if(E.db.raidcooldown.castannounce == true) then
-                        SendChatMessage(sourceName.." casted "..spellName.." CD "..cooldown['CD'].." seconds","RAID")                   
+                        SendChatMessage(sourceName.." casted "..spellName.." CD "..(cooldown['CD'] - CDReduc).." seconds","RAID")                   
 	                end
 				end
 			end
