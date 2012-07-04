@@ -95,7 +95,7 @@ RC.cooldowns = {
 		spellID = 740,
 		succ = "SPELL_CAST_SUCCESS",
 		name = "T",
-		CD = 180,
+		CD = 480,
 		class = "DRUID",
 		cast_time = 8,
 	},
